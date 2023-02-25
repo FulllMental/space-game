@@ -1,6 +1,7 @@
-import time
 import asyncio
 import curses
+import time
+from random import choice, randint
 
 
 def blinking_star(canvas):
@@ -21,37 +22,42 @@ def blinking_star(canvas):
         time.sleep(0.3)
 
 
-async def blink(canvas, row, column, symbol='*'):
+async def blink(canvas, row, column, symbol):
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        await asyncio.sleep(0)
+        for _ in range(20):
+            await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol)
-        await asyncio.sleep(0)
+        for _ in range(3):
+            await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        await asyncio.sleep(0)
+        for _ in range(5):
+            await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol)
-        await asyncio.sleep(0)
+        for _ in range(3):
+            await asyncio.sleep(0)
 
 
 def draw(canvas):
     curses.curs_set(False)
     canvas.border()
-    row, column = (5, 20)
+    row, column = curses.window.getmaxyx(canvas)
 
-    coroutines = [blink(canvas, row, column + index * 2) for index in range(5)]
+    coroutines = [blink(canvas, randint(1, row-2), randint(1, column-2), choice('+*.:')) for _ in range(200)]
     while True:
-        canvas.refresh()
         for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)
-                time.sleep(0.1)
             except StopIteration:
                 coroutines.remove(coroutine)
                 if not coroutines:
                     break
+        canvas.refresh()
+        TIC_TIMEOUT = 0.1
+        time.sleep(TIC_TIMEOUT)
 
     # blinking_star(canvas)
     # canvas.addstr(row, column, 'PRESS START', curses.A_BOLD | curses.A_REVERSE | curses.A_BLINK)
